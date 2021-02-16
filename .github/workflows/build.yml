@@ -28,19 +28,12 @@ jobs:
             !dist/**/*.md
       - name: SSH Auto Deploy
         uses: hengkx/ssh-deploy@v1.0.1
-        with:
-          # remote host
+        env:
           HOST: ${{ secrets.RSYNC_DEPLOY_HOST }}
-          # username
           USERNAME: ${{ secrets.RSYNC_DEPLOY_USER }}
-          # password
           PASSWORD: ${{ secrets.RSYNC_DEPLOY_PASSWORD }}
-          # port
           PORT: 22
-          # local path
           SOURCE: 'dist/'
-          # remote target
           TARGET: ${{ secrets.RSYNC_DEPLOY_DEST_PATH }}
-          # upload success execute command
           AFTER_COMMAND: 'npm install && npm run build --if-present'
 
