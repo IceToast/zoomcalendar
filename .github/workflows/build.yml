@@ -26,14 +26,13 @@ jobs:
           path: |
             dist
             !dist/**/*.md
-      - name: SSH Auto Deploy
-        uses: hengkx/ssh-deploy@v1.0.1
+      - name: Deploy to Server
+        uses: easingthemes/ssh-deploy@v2.1.5
         env:
-          HOST: ${{ secrets.RSYNC_DEPLOY_HOST }}
-          USERNAME: ${{ secrets.RSYNC_DEPLOY_USER }}
-          PASSWORD: ${{ secrets.RSYNC_DEPLOY_PASSWORD }}
-          PORT: 22
-          SOURCE: 'dist/'
-          TARGET: ${{ secrets.RSYNC_DEPLOY_DEST_PATH }}
-          AFTER_COMMAND: 'npm install && npm run build --if-present'
+            SSH_PRIVATE_KEY: ${{ secrets.RSYNC_DEPLOY_SECRET }}
+            ARGS: "-rltgoDzvO --delete"
+            SOURCE: "dist/"
+            REMOTE_HOST: ${{ secrets.RSYNC_DEPLOY_HOST }}
+            REMOTE_USER: ${{ secrets.RSYNC_DEPLOY_USER }}
+            TARGET: ${{ secrets.RSYNC_DEPLOY_DEST_PATH }}
 
