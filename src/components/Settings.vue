@@ -18,56 +18,83 @@
 				<h2>Settings</h2>
 				<div class="actions">
 					<input type="file" ref="fileInput" accept=".json" />
-					<button class="dark" @click="importFile()">Import</button>
-					<input type="text" v-model="exportName" />
-					<button class="dark" @click="exportFile()">Export</button>
+					<Button class="dark" @click="importFile()">Import</Button>
+					<input type="text" class="dark" v-model="exportName" />
+					<Button class="dark" @click="exportFile()">Export</Button>
+					<div class="autoclose">
+						<span>Close join tab after</span
+						><input
+							class="dark"
+							type="number"
+							v-model="closeTabAfterInput"
+							:class="{ error: !validCloseTabAfterInput }"
+							@blur="() => (closeTabAfterInput = closeTabAfter)"
+						/><span>s</span>
+					</div>
+					<ToggleButton
+						:margin="5"
+						:width="61"
+						:height="28"
+						class="toggle"
+						v-model="closeTabCheckbox"
+					/>
 				</div>
-				<span :class="{ status, active: status == 'ok' ? 0 : 1 }">{{
-					status
-				}}</span>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import SettingsIcon from "vue-material-design-icons/Cog";
-import CloseIcon from "vue-material-design-icons/Close";
-import weekDataCheck from "../util/weekDataCheck.js";
+import SettingsIcon from 'vue-material-design-icons/Cog';
+import CloseIcon from 'vue-material-design-icons/Close';
+import weekDataCheck from '../util/weekDataCheck.js';
+import Button from './Button';
+import { ToggleButton } from 'vue-js-toggle-button';
 
 export default {
-	name: "Settings",
-	props: { week: Array },
+	name: 'Settings',
+	props: { week: Array, closeTabAfter: Number, closeTab: Boolean },
 	data: function() {
 		return {
-			status: "ok",
-			exportName: "plan.json",
+			exportName: 'plan.json',
 			open: false,
+			closeTabCheckbox: this.closeTab,
+			closeTabAfterInput: this.closeTabAfter
 		};
 	},
-	components: { SettingsIcon, CloseIcon },
+	computed: {
+		validCloseTabAfterInput: function() {
+			return parseFloat(this.closeTabAfterInput) >= 0;
+		}
+	},
+	components: { SettingsIcon, CloseIcon, Button, ToggleButton },
 	watch: {
-		open: function(newVal) {
-			if (newVal == false) this.status = "ok";
+		closeTabCheckbox: function(newVal) {
+			this.$emit('closeTabChanged', newVal);
 		},
+		closeTabAfterInput: function(newVal) {
+			if (this.validCloseTabAfterInput)
+				this.$emit('closeTabAfterChanged', parseFloat(newVal));
+		}
 	},
 	methods: {
 		importFile: function() {
 			const files = this.$refs.fileInput.files;
 			if (files.length == 0) {
-				this.setStatus("No file selected");
+				this.showNotification('No file selected', 'error');
 				return;
 			}
 
 			const reader = new FileReader();
-			reader.addEventListener("load", (event) => {
+			reader.addEventListener('load', event => {
 				const correctData = weekDataCheck(event.target.result);
 
 				if (correctData != null) {
-					this.$emit("weekImport", correctData);
-					this.setStatus("Imported JSON");
+					this.$emit('weekImport', correctData);
+					console.log(event.target);
+					this.showNotification('Imported Data', 'success');
 				} else {
-					this.setStatus("JSON format is wrong");
+					this.showNotification('JSON format is wrong', 'error');
 				}
 			});
 
@@ -75,32 +102,34 @@ export default {
 		},
 
 		exportFile: function() {
-			if (this.exportName.trim() == "") {
-				this.setStatus("No fileName specified");
+			if (this.exportName.trim() == '') {
+				this.showNotification('No filename specified', 'error');
 				return;
 			}
 
-			var element = document.createElement("a");
+			var element = document.createElement('a');
 			element.setAttribute(
-				"href",
-				"data:text/json;charset=utf-8," +
+				'href',
+				'data:text/json;charset=utf-8,' +
 					encodeURIComponent(JSON.stringify(this.week, null, 2))
 			);
-			element.setAttribute("download", this.exportName);
-			element.style.display = "none";
+			element.setAttribute('download', this.exportName);
+			element.style.display = 'none';
 			document.body.appendChild(element);
 			element.click();
 			document.body.removeChild(element);
-			this.setStatus("Exported " + this.exportName);
+			this.showNotification('Exported ' + this.exportName, 'success');
 		},
 
-		setStatus: function(text) {
-			this.status = "ok";
-			setTimeout(() => {
-				this.status = text;
-			}, 100);
-		},
-	},
+		showNotification: function(title, type) {
+			this.$notify({
+				group: 'main',
+				title: title,
+				duration: 5000,
+				type: type
+			});
+		}
+	}
 };
 </script>
 
@@ -118,6 +147,7 @@ h2 {
 	background-color: var(--light);
 	border-bottom-right-radius: 10px;
 	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+	color: var(--dark);
 }
 
 #settingsIcon > * {
@@ -185,17 +215,22 @@ h2 {
 	place-items: center;
 }
 
-#settings > .popup > .actions > input[type="text"] {
-	color: var(--dark);
+#settings > .popup > .actions > input[type='text'] {
 	padding: 7px;
 }
 
-#settings > .popup > .status {
-	opacity: 0;
+#settings > .popup > .actions > .autoclose {
+	display: flex;
+	align-items: center;
+	width: 100%;
 }
 
-#settings > .popup > .status.active {
-	transition: 0.3s ease;
-	opacity: 1;
+#settings > .popup > .actions > .autoclose > input {
+	width: 30px;
+	margin: 0px 5px;
+}
+
+#settings > .popup > .actions > .toggle {
+	margin: 10px;
 }
 </style>
