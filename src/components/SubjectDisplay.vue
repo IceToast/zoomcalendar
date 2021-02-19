@@ -17,7 +17,7 @@
 				<PasswordIcon :size="20" />
 			</button>
 
-			<a :href="link" target="_blank">
+			<a :href="link" target="_blank" @click="copy">
 				<button class="customButton">
 					<JoinIcon :size="20" />
 				</button>
